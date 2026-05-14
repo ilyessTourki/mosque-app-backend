@@ -8,6 +8,7 @@ import {
 } from "./prayers.schema.js";
 import { sendSuccess, sendError } from "../../utils/response.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { param } from "../../utils/params.js";
 
 // ── Month Schedule ────────────────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ export const createMonthSchedule = asyncHandler(
 
 export const getMonthSchedules = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const mosqueId = req.params["mosqueId"]!;
+    const mosqueId = param(req.params["mosqueId"]!);
     const data = await prayersService.getMonthSchedules(mosqueId);
     sendSuccess(res, data, "Month schedules fetched");
   }
@@ -36,14 +37,14 @@ export const getMonthSchedules = asyncHandler(
 
 export const getMonthScheduleById = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const data = await prayersService.getMonthScheduleById(req.params["scheduleId"]!);
+    const data = await prayersService.getMonthScheduleById(param(req.params["scheduleId"]!));
     sendSuccess(res, data, "Schedule fetched");
   }
 );
 
 export const getActiveMonthSchedule = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const mosqueId = req.params["mosqueId"]!;
+    const mosqueId = param(req.params["mosqueId"]!);
     const data = await prayersService.getActiveMonthSchedule(mosqueId);
     sendSuccess(res, data, "Active schedule fetched");
   }
@@ -53,7 +54,7 @@ export const setActiveSchedule = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const data = await prayersService.setActiveSchedule(
       req.admin!.mosqueId,
-      req.params["scheduleId"]!
+      param(req.params["scheduleId"]!)
     );
     sendSuccess(res, data, "Active schedule updated");
   }
@@ -67,7 +68,7 @@ export const bulkCreateDays = asyncHandler(
       return;
     }
     const data = await prayersService.bulkCreateDays(
-      req.params["scheduleId"]!,
+      param(req.params["scheduleId"]!),
       result.data
     );
     sendSuccess(res, data, `${data.count} days inserted`, 201);
@@ -76,7 +77,7 @@ export const bulkCreateDays = asyncHandler(
 
 export const getTodayPrayers = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const mosqueId = req.params["mosqueId"]!;
+    const mosqueId = param(req.params["mosqueId"]!);
     const data = await prayersService.getTodayPrayers(mosqueId);
     sendSuccess(res, data, "Today's prayers fetched");
   }
@@ -101,7 +102,7 @@ export const createJumuah = asyncHandler(
 
 export const getJumuahSchedules = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const mosqueId = req.params["mosqueId"]!;
+    const mosqueId = param(req.params["mosqueId"]!);
     const data = await prayersService.getJumuahSchedules(mosqueId);
     sendSuccess(res, data, "Jumuah schedules fetched");
   }
@@ -109,7 +110,7 @@ export const getJumuahSchedules = asyncHandler(
 
 export const getActiveJumuah = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const mosqueId = req.params["mosqueId"]!;
+    const mosqueId = param(req.params["mosqueId"]!);
     const data = await prayersService.getActiveJumuah(mosqueId);
     sendSuccess(res, data, "Active Jumuah fetched");
   }

@@ -8,16 +8,17 @@ import {
 } from "./news.schema.js";
 import { sendSuccess, sendError } from "../../utils/response.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { param } from "../../utils/params.js";
 
 export const getAllNews = asyncHandler(async (req: Request, res: Response) => {
-  const mosqueId = req.params["mosqueId"]!;
+  const mosqueId = param(req.params["mosqueId"]!);
   const query = newsQuerySchema.parse(req.query);
   const data = await newsService.getAll(mosqueId, query);
   sendSuccess(res, data, "News fetched successfully");
 });
 
 export const getNewsById = asyncHandler(async (req: Request, res: Response) => {
-  const data = await newsService.getById(req.params["id"]!);
+  const data = await newsService.getById(param(req.params["id"]!));
   sendSuccess(res, data, "News post fetched");
 });
 
@@ -41,7 +42,7 @@ export const updateNews = asyncHandler(
       return;
     }
     const data = await newsService.update(
-      req.params["id"]!,
+      param(req.params["id"]!),
       req.admin!.mosqueId,
       result.data
     );
@@ -52,7 +53,7 @@ export const updateNews = asyncHandler(
 export const deleteNews = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const data = await newsService.delete(
-      req.params["id"]!,
+      param(req.params["id"]!),
       req.admin!.mosqueId
     );
     sendSuccess(res, data, "News post deleted");

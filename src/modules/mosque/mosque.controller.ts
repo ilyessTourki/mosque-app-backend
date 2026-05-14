@@ -4,10 +4,11 @@ import { mosqueService } from "./mosque.service.js";
 import { updateMosqueSchema } from "./mosque.schema.js";
 import { sendSuccess, sendError } from "../../utils/response.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { param } from "../../utils/params.js";
 
 export const getMosque = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const mosqueId = req.params["mosqueId"] ?? req.admin!.mosqueId;
+    const mosqueId = param(req.params["mosqueId"]) ?? req.admin!.mosqueId;
     const data = await mosqueService.getById(mosqueId);
     sendSuccess(res, data, "Mosque fetched successfully");
   }

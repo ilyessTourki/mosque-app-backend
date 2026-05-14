@@ -8,10 +8,11 @@ import {
 } from "./imam.schema.js";
 import { sendSuccess, sendError } from "../../utils/response.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { param } from "../../utils/params.js";
 
 export const submitQuestion = asyncHandler(
   async (req: Request, res: Response) => {
-    const mosqueId = req.params["mosqueId"]!;
+    const mosqueId = param(req.params["mosqueId"]!);
     const result = createQuestionSchema.safeParse(req.body);
     if (!result.success) {
       sendError(res, "Validation failed", 400, result.error.message);
@@ -24,7 +25,7 @@ export const submitQuestion = asyncHandler(
 
 export const getPublicAnswered = asyncHandler(
   async (req: Request, res: Response) => {
-    const mosqueId = req.params["mosqueId"]!;
+    const mosqueId = param(req.params["mosqueId"]!);
     const query = questionQuerySchema.parse(req.query);
     const data = await imamService.getPublicAnswered(mosqueId, query);
     sendSuccess(res, data, "Answered questions fetched");
@@ -47,7 +48,7 @@ export const answerQuestion = asyncHandler(
       return;
     }
     const data = await imamService.answerQuestion(
-      req.params["id"]!,
+      param(req.params["id"]!),
       req.admin!.mosqueId,
       result.data
     );
@@ -58,7 +59,7 @@ export const answerQuestion = asyncHandler(
 export const archiveQuestion = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const data = await imamService.archiveQuestion(
-      req.params["id"]!,
+      param(req.params["id"]!),
       req.admin!.mosqueId
     );
     sendSuccess(res, data, "Question archived");
