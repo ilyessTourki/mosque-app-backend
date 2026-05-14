@@ -4,3 +4,4 @@ dist/
 prisma/generated/
 *.log
 .DS_Store
+src/generated/
