@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum MediaType {
+  images
+  video
+  youtube
+  none
+}
+
+enum QuestionStatus {
+  pending
+  answered
+  archived
+}
+
+enum NewsMediaType {
+  image
+  videoThumbnail
+}
+
+enum LanguageCode {
+  en
+  de
+  ar
+}
+
+// ─── Mosque ───────────────────────────────────────────────────────────────────
+
+model Mosque {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  address     String
+  phone       String?
+  whatsapp    String?
+  facebookUrl String?
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  monthSchedules  PrayerMonthSchedule[]
+  jumuahSchedules JumuahSchedule[]
+  newsPosts       NewsPost[]
+  imamQuestions   ImamQuestion[]
+  admins          Admin[]
+}
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+model Admin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  mosqueId  String
+  mosque    Mosque   @relation(fields: [mosqueId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Prayer Month Schedule ────────────────────────────────────────────────────
+
+model PrayerMonthSchedule {
+  id               String   @id @default(uuid())
+  mosqueId         String
+  mosque           Mosque   @relation(fields: [mosqueId], references: [id])
+  hijriMonthName   String
+  hijriYear        Int
+  gregorianMonth   Int
+  gregorianYear    Int
+  startDate        DateTime
+  endDate          DateTime
+  isActive         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  days PrayerDaySchedule[]
+
+  @@unique([mosqueId, hijriYear, hijriMonthName])
+}
+
+// ─── Prayer Day Schedule ──────────────────────────────────────────────────────
+
+model PrayerDaySchedule {
+  id              String              @id @default(uuid())
+  monthScheduleId String
+  monthSchedule   PrayerMonthSchedule @relation(fields: [monthScheduleId], references: [id], onDelete: Cascade)
+  gregorianDate   DateTime
+  hijriDay        Int
+  hijriMonthName  String
+  hijriYear       Int
+
+  fajrAdhan    String
+  fajrIqama    String?
+  sunrise      String
+  dhuhrAdhan   String
+  dhuhrIqama   String?
+  asrAdhan     String
+  asrIqama     String?
+  maghribAdhan String
+  maghribIqama String?
+  ishaAdhan    String
+  ishaIqama    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([monthScheduleId, gregorianDate])
+}
+
+// ─── Jumuah Schedule ─────────────────────────────────────────────────────────
+
+model JumuahSchedule {
+  id        String    @id @default(uuid())
+  mosqueId  String
+  mosque    Mosque    @relation(fields: [mosqueId], references: [id])
+  title     String
+  adhanTime String
+  iqamaTime String
+  validFrom DateTime
+  validTo   DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ─── News Post ────────────────────────────────────────────────────────────────
+
+model NewsPost {
+  id          String    @id @default(uuid())
+  mosqueId    String
+  mosque      Mosque    @relation(fields: [mosqueId], references: [id])
+  title       String
+  description String
+  category    String?
+  isImportant Boolean   @default(false)
+  place       String?
+  mediaType   MediaType @default(none)
+  videoUrl    String?
+  youtubeId   String?
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  media NewsMedia[]
+}
+
+// ─── News Media ───────────────────────────────────────────────────────────────
+
+model NewsMedia {
+  id         String        @id @default(uuid())
+  newsPostId String
+  newsPost   NewsPost      @relation(fields: [newsPostId], references: [id], onDelete: Cascade)
+  url        String
+  type       NewsMediaType @default(image)
+  order      Int           @default(0)
+  createdAt  DateTime      @default(now())
+}
+
+// ─── Imam Question ────────────────────────────────────────────────────────────
+
+model ImamQuestion {
+  id         String         @id @default(uuid())
+  mosqueId   String
+  mosque     Mosque         @relation(fields: [mosqueId], references: [id])
+  name       String?
+  question   String
+  answer     String?
+  status     QuestionStatus @default(pending)
+  createdAt  DateTime       @default(now())
+  answeredAt DateTime?
+}
+
+// ─── App Language ─────────────────────────────────────────────────────────────
+
+model AppLanguage {
+  id       String       @id @default(uuid())
+  code     LanguageCode @unique
+  name     String
+  isActive Boolean      @default(true)
+}
