@@ -71,6 +71,42 @@ export const prayersService = {
       data: { isActive: true },
     });
   },
+  async deleteMonthSchedule(mosqueId: string, scheduleId: string) {
+  const schedule = await prisma.prayerMonthSchedule.findFirst({
+    where: {
+      id: scheduleId,
+      mosqueId,
+    },
+    select: {
+      id: true,
+      hijriMonthName: true,
+      hijriYear: true,
+    },
+  });
+
+  if (!schedule) {
+    throw new Error("Prayer schedule not found or you do not have permission to delete it.");
+  }
+
+  await prisma.$transaction([
+    prisma.prayerDaySchedule.deleteMany({
+      where: {
+        monthScheduleId: schedule.id,
+      },
+    }),
+    prisma.prayerMonthSchedule.delete({
+      where: {
+        id: schedule.id,
+      },
+    }),
+  ]);
+
+  return {
+    id: schedule.id,
+    hijriMonthName: schedule.hijriMonthName,
+    hijriYear: schedule.hijriYear,
+  };
+},
 
   // ── Day Schedules (bulk insert) ───────────────────────────────────────────
 

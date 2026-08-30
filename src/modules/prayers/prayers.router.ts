@@ -11,6 +11,7 @@ import {
   createJumuah,
   getJumuahSchedules,
   getActiveJumuah,
+  deleteMonthSchedule,
 } from "./prayers.controller.js";
 
 const router = Router();
@@ -27,6 +28,7 @@ router.get("/:mosqueId/jumuah/active", getActiveJumuah);
 router.post("/schedule",                        authMiddleware, createMonthSchedule);
 router.post("/schedule/:scheduleId/days",       authMiddleware, bulkCreateDays);
 router.patch("/schedule/:scheduleId/activate",  authMiddleware, setActiveSchedule);
+router.delete("/schedule/:scheduleId",          authMiddleware, deleteMonthSchedule);
 router.post("/jumuah",                          authMiddleware, createJumuah);
 
 export default router;
