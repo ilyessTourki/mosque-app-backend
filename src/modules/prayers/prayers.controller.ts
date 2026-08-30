@@ -59,6 +59,20 @@ export const setActiveSchedule = asyncHandler(
     sendSuccess(res, data, "Active schedule updated");
   }
 );
+export const deleteMonthSchedule = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const data = await prayersService.deleteMonthSchedule(
+      req.admin!.mosqueId,
+      param(req.params["scheduleId"]!)
+    );
+
+    sendSuccess(
+      res,
+      data,
+      "Month schedule and its prayer days deleted"
+    );
+  }
+);
 
 export const bulkCreateDays = asyncHandler(
   async (req: AuthRequest, res: Response) => {
