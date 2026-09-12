@@ -1,8 +1,15 @@
 import { z } from "zod";
 
+export const askImamCategorySchema = z.enum([
+  "SHARIA",
+  "PERSONAL_GUIDANCE",
+  "COMPLAINT",
+]);
+
 export const createQuestionSchema = z.object({
-  name: z.string().optional(),
-  question: z.string().min(10, "Question must be at least 10 characters"),
+  name: z.string().min(1).optional(),
+  question: z.string().min(1),
+  category: askImamCategorySchema,
 });
 
 export const answerQuestionSchema = z.object({

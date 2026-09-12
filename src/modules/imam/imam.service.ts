@@ -8,7 +8,10 @@ import type {
 export const imamService = {
   async submitQuestion(mosqueId: string, input: CreateQuestionInput) {
     return prisma.imamQuestion.create({
-      data: { mosqueId, ...input },
+      data: { mosqueId,
+    name: input.name,
+    question: input.question,
+    category: input.category, },
     });
   },
 

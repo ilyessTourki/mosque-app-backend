@@ -15,6 +15,11 @@ enum MediaType {
   youtube
   none
 }
+enum AskImamCategory {
+  SHARIA
+  PERSONAL_GUIDANCE
+  COMPLAINT
+}
 
 enum QuestionStatus {
   pending
@@ -176,6 +181,7 @@ model ImamQuestion {
   name       String?
   question   String
   answer     String?
+  category   AskImamCategory @default(SHARIA)
   status     QuestionStatus @default(pending)
   createdAt  DateTime       @default(now())
   answeredAt DateTime?
