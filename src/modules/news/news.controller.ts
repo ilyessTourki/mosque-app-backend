@@ -1,6 +1,7 @@
 import type { Response, Request } from "express";
 import type { AuthRequest } from "../../middlewares/auth.middleware.js";
 import { newsService } from "./news.service.js";
+import { notificationService } from "../notifications/notification.service.js";
 import {
   createNewsSchema,
   updateNewsSchema,
@@ -25,11 +26,28 @@ export const getNewsById = asyncHandler(async (req: Request, res: Response) => {
 export const createNews = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const result = createNewsSchema.safeParse(req.body);
+
     if (!result.success) {
       sendError(res, "Validation failed", 400, result.error.message);
       return;
     }
-    const data = await newsService.create(req.admin!.mosqueId, result.data);
+
+    const mosqueId = req.admin!.mosqueId;
+    const data = await newsService.create(mosqueId, result.data);
+
+    if (data.isPublished) {
+      try {
+        await notificationService.sendNewsPublished({
+          mosqueId,
+          newsId: data.id,
+          title: data.title,
+          body: data.description,
+        });
+      } catch (error) {
+        console.error("FCM notification failed after creating news post:", error);
+      }
+    }
+
     sendSuccess(res, data, "News post created", 201);
   }
 );

@@ -1245,16 +1245,24 @@
           <!-- ── IMAM QUESTIONS ── -->
           <div class="view" id="view-imam">
             <div class="tabs">
-              <button class="tab-btn active" onclick="filterQuestions('pending', this)">Pending</button>
-              <button class="tab-btn" onclick="filterQuestions('answered', this)">Answered</button>
-              <button class="tab-btn" onclick="filterQuestions('archived', this)">Archived</button>
-            </div>
+  <button class="tab-btn active" onclick="filterQuestions('pending', this)">Pending</button>
+  <button class="tab-btn" onclick="filterQuestions('answered', this)">Answered</button>
+  <button class="tab-btn" onclick="filterQuestions('archived', this)">Archived</button>
+</div>
+
+<div class="tabs" id="imam-category-tabs" style="margin-top:calc(var(--space-4) * -1)">
+  <button class="tab-btn active" onclick="filterQuestionCategory('ALL', this)">All categories</button>
+  <button class="tab-btn" onclick="filterQuestionCategory('SHARIA', this)">Sharia</button>
+  <button class="tab-btn" onclick="filterQuestionCategory('PERSONAL_GUIDANCE', this)">Personal guidance</button>
+  <button class="tab-btn" onclick="filterQuestionCategory('COMPLAINT', this)">Complaints</button>
+</div>
             <div class="card">
               <div class="table-wrap">
                 <table>
                   <thead>
                     <tr>
                       <th>Name</th>
+                      <th>Category</th>
                       <th>Question</th>
                       <th>Status</th>
                       <th>Date</th>
@@ -1263,7 +1271,7 @@
                   </thead>
                   <tbody id="imam-table">
                     <tr class="skeleton-row">
-                      <td colspan="5">
+                      <td colspan="6">
                         <div class="skeleton skeleton-line" style="width:60%"></div>
                       </td>
                     </tr>
@@ -1599,6 +1607,7 @@
     let mosqueId = null;
     let currentNewsId = null;
     let currentQuestionFilter = 'pending';
+    let currentQuestionCategory = 'ALL';
 
 
     //miledi to hejri 
@@ -2444,27 +2453,144 @@ async function saveNews() {
     }
 
     // ── Imam Questions ────────────────────────────────────────────────────────────
-    async function loadQuestions(status) {
-      try {
-        const { items } = await api(`/imam?status=${status}&limit=50`);
-        if (!items.length) {
-          document.getElementById('imam-table').innerHTML = `<tr><td colspan="5"><div class="empty-state"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><h3>No ${status} questions</h3><p>Questions will appear here</p></div></td></tr>`;
-          return;
-        }
-        document.getElementById('imam-table').innerHTML = items.map(q => `
+
+
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function categoryBadge(category) {
+  const categories = {
+    SHARIA: {
+      label: 'Sharia',
+      className: 'badge-primary',
+    },
+    PERSONAL_GUIDANCE: {
+      label: 'Personal guidance',
+      className: 'badge-success',
+    },
+    COMPLAINT: {
+      label: 'Complaint',
+      className: 'badge-warning',
+    },
+  };
+
+  const item = categories[category] || {
+    label: 'Uncategorized',
+    className: 'badge-neutral',
+  };
+
+  return `<span class="badge ${item.className}">${item.label}</span>`;
+}
+
+async function loadQuestions(status = currentQuestionFilter) {
+  currentQuestionFilter = status;
+
+  try {
+    const response = await api(
+  `/imam?status=${encodeURIComponent(status)}&limit=50`
+);
+
+const items = Array.isArray(response)
+  ? response
+  : (response.items || []);
+
+const filteredItems = currentQuestionCategory === 'ALL'
+  ? items
+  : items.filter((question) => question.category === currentQuestionCategory);
+
+    if (!filteredItems.length) {
+      const categoryText = currentQuestionCategory === 'ALL'
+        ? ''
+        : ` in ${categoryBadge(currentQuestionCategory).replace(/<[^>]*>/g, '')}`;
+
+      document.getElementById('imam-table').innerHTML = `
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i data-lucide="message-circle-question" width="32" height="32"></i>
+              <h3>No ${escapeHtml(status)} questions${escapeHtml(categoryText)}</h3>
+              <p>Questions submitted from the mobile app will appear here.</p>
+            </div>
+          </td>
+        </tr>
+      `;
+      lucide.createIcons();
+      return;
+    }
+
+    document.getElementById('imam-table').innerHTML = filteredItems.map((q) => `
       <tr>
-        <td>${q.name || '<em style="color:var(--color-text-faint)">Anonymous</em>'}</td>
-        <td style="max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${q.question}</td>
+        <td>
+          ${q.name
+            ? escapeHtml(q.name)
+            : '<em style="color:var(--color-text-faint)">Anonymous</em>'}
+        </td>
+
+        <td>${categoryBadge(q.category)}</td>
+
+        <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          ${escapeHtml(q.question)}
+        </td>
+
         <td>${statusBadge(q.status)}</td>
-        <td style="font-size:var(--text-xs); color:var(--color-text-muted);">${fmtDate(q.createdAt)}</td>
-        <td style="display:flex; gap:var(--space-2);">
-          ${q.status === 'pending' ? `<button class="btn btn-primary btn-sm" onclick="openAnswer('${q.id}', \`${q.question.replace(/`/g, '')}\`)">Answer</button>` : ''}
-          ${q.status !== 'archived' ? `<button class="btn btn-secondary btn-sm" onclick="archiveQ('${q.id}')">Archive</button>` : ''}
+
+        <td style="font-size:var(--text-xs);color:var(--color-text-muted)">
+          ${fmtDate(q.createdAt)}
+        </td>
+
+        <td style="display:flex;gap:var(--space-2)">
+          ${q.status === 'pending' ? `
+            <button
+              class="btn btn-primary btn-sm"
+              onclick='openAnswer(${JSON.stringify(q.id)}, ${JSON.stringify(q.question)})'
+            >
+              Answer
+            </button>
+          ` : ''}
+
+          ${q.status !== 'archived' ? `
+            <button
+              class="btn btn-secondary btn-sm"
+              onclick="archiveQ('${escapeHtml(q.id)}')"
+            >
+              Archive
+            </button>
+          ` : ''}
         </td>
       </tr>
     `).join('');
-      } catch (e) { toast('Failed to load questions', 'error'); }
-    }
+
+    lucide.createIcons();
+  } catch (error) {
+    toast(error.message || 'Failed to load questions', 'error');
+  }
+}
+
+function filterQuestions(status, element) {
+  currentQuestionFilter = status;
+
+  document.querySelectorAll('.view#view-imam > .tabs:first-child .tab-btn')
+    .forEach((button) => button.classList.remove('active'));
+
+  element.classList.add('active');
+  loadQuestions(status);
+}
+
+function filterQuestionCategory(category, element) {
+  currentQuestionCategory = category;
+
+  document.querySelectorAll('#imam-category-tabs .tab-btn')
+    .forEach((button) => button.classList.remove('active'));
+
+  element.classList.add('active');
+  loadQuestions(currentQuestionFilter);
+}
 
     function filterQuestions(status, el) {
       currentQuestionFilter = status;
