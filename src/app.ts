@@ -9,6 +9,7 @@ import mosqueRouter from "./modules/mosque/mosque.router.js";
 import prayersRouter from "./modules/prayers/prayers.router.js";
 import newsRouter from "./modules/news/news.router.js";
 import imamRouter from "./modules/imam/imam.router.js";
+import lessonsRouter from "./modules/lessons/lessons.router.js";
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.get("/health", (_req, res) => {
  app.use("/api/prayers", prayersRouter);
  app.use("/api/news",    newsRouter);
  app.use("/api/imam",    imamRouter);
+ app.use("/api/lessons", lessonsRouter);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorMiddleware);

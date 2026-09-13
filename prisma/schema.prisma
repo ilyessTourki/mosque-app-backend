@@ -8,7 +8,22 @@ datasource db {
 }
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
+enum LessonType {
+  TAHFIZ
+  ARABIC
+  ISLAMIC_STUDIES
+  GENERAL
+}
 
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
 enum MediaType {
   images
   video
@@ -58,6 +73,7 @@ model Mosque {
   newsPosts       NewsPost[]
   imamQuestions   ImamQuestion[]
   admins          Admin[]
+  lessons         MosqueLesson[]
 }
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
@@ -194,4 +210,26 @@ model AppLanguage {
   code     LanguageCode @unique
   name     String
   isActive Boolean      @default(true)
+}
+// ─── Lessons ─────────────────────────────────────────────────────────────
+
+model MosqueLesson {
+  id          String     @id @default(uuid())
+  mosqueId    String
+  title       String
+  description String?
+  type        LessonType
+  dayOfWeek   DayOfWeek
+  startTime   String
+  endTime     String
+  location    String?
+  teacher     String?
+  audience    String?
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  mosque      Mosque     @relation(fields: [mosqueId], references: [id], onDelete: Cascade)
+
+  @@index([mosqueId, active, dayOfWeek, startTime])
 }
